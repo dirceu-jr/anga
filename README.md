@@ -20,7 +20,7 @@ This is the probably hardware that will be used:
 
 - SDS011
 
-<img width="260" src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/sds-11.avif">
+<img width="260" src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/sds-011.avif">
 
 - DFRobot CO (and other gases)
 
