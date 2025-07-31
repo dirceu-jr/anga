@@ -6,7 +6,7 @@ I live in [Curitiba city](https://en.wikipedia.org/wiki/Curitiba), some say _the
 
 Urban socio-environmental problems identified in Curitiba includes air pollution, water pollution and environmental degradation.
 
-This project is developed with the objective of creating <strong>low-cost</strong> air monitoring stations, enabling the creation of a dense monitoring network with the capacity to locate occurrences of air pollution and contamination.
+This project is developed with the objective of creating <strong>low-cost</strong> monitoring stations, enabling the creation of a dense monitoring network with the capacity to locate occurrences of air pollution and contamination.
 
 With community and educational purposes in mind, information about suppliers, configurations, and software are all open and open-source.
 
