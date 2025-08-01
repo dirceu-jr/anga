@@ -4,8 +4,10 @@
 // - Disable Bluetooth - DONE;
 // - Check/disable GPS - DONE;
 // - ESP32 deep sleep - DONE;
-// - CO;
+// - CO - DONE;
+// - CO sensor is "on" when ESP32 is sleeping?
 // - VOC;
+// - Optimizations;
 
 // Select your modem:
 #define TINY_GSM_MODEM_SIM7000
@@ -42,13 +44,18 @@ const char gprsPass[] = "datatem";
 const char server[] = "api.thingspeak.com";
 const int port = 80;
 
-const char* writeAPIKey = "N8URJD5TZVON1T54";
+const char* writeAPIKey = "NEC73XT4UKMIPOZM";
 
 #include "esp_wifi.h"
 #include "esp_bt.h"
 
 #include <TinyGsmClient.h>
 #include <ArduinoHttpClient.h>
+
+#include "DFRobot_MultiGasSensor.h"
+
+#define I2C_ADDRESS    0x74
+DFRobot_GAS_I2C gas(&Wire, I2C_ADDRESS);
 
 #ifdef DUMP_AT_COMMANDS
 #include <StreamDebugger.h>
@@ -70,15 +77,23 @@ HttpClient    http(client, server, port);
 void modemPowerOn() {
   pinMode(PWR_PIN, OUTPUT);
   digitalWrite(PWR_PIN, LOW);
-  delay(1000);    //Datasheet Ton mintues = 1S
+  delay(1000); //Datasheet Ton mintues = 1S
   digitalWrite(PWR_PIN, HIGH);
 }
 
 void modemPowerOff() {
   pinMode(PWR_PIN, OUTPUT);
   digitalWrite(PWR_PIN, LOW);
-  delay(1500);    //Datasheet Ton mintues = 1.2S
+  delay(1500); //Datasheet Ton mintues = 1.2S
   digitalWrite(PWR_PIN, HIGH);
+}
+
+void modemHardReset() {
+  SerialMon.println(F("Performing modem hard reset..."));
+  modemPowerOff();
+  delay(5000); // Wait 5 seconds for complete power down
+  modemPowerOn();
+  delay(5000); // Wait 5 seconds for complete power up
 }
 
 void setup() {
@@ -95,8 +110,18 @@ void setup() {
   esp_wifi_stop();
   esp_bt_controller_disable();
 
-  // modemPowerOff();
+  // gas sensor
+  // Mode of obtaining data: the main controller needs to request the sensor for data
+  gas.changeAcquireMode(gas.PASSIVITY);
+  delay(1000);
+  // Turn on temperature compensation
+  gas.setTempCompensation(gas.ON);
+
+  // modem
   SerialMon.println(F("Power modem on..."));
+  // TODO:
+  // - if stall again, test with hard reset;
+  // modemHardReset();
   modemPowerOn();
 
   delay(1000);
@@ -192,20 +217,10 @@ void loop() {
 
   // Now try HTTP request
   http.setTimeout(30000);
-  // http.connectionKeepAlive();  // Currently, this is needed for HTTPS
-
-  // Create a sample value to send
-  int sensor1Value = random(100);
-  int sensor2Value = random(100);
-
-  SerialMon.print(F("Value 1 to send: "));
-  SerialMon.println(sensor1Value);
-
-  SerialMon.print(F("Value 2 to send: "));
-  SerialMon.println(sensor2Value);
+  // http.connectionKeepAlive(); // this may be needed for HTTPS
 
   // Construct the resource URL
-  String resource = String("/update?api_key=") + writeAPIKey + "&field1=" + String(sensor1Value) + "&field2=" + String(sensor2Value);
+  String resource = String("/update?api_key=") + writeAPIKey + "&field1=" + String(gas.readGasConcentrationPPM());
 
   SerialMon.print(F("Performing HTTP POST request... "));
   int err = http.post(resource);
@@ -260,9 +275,18 @@ void loop() {
   modem.sendAT("+CPOWD=1");
   modem.waitResponse();
 
+  // Then turn off the modem power
+  SerialMon.println(F("Powering off modem..."));
   modemPowerOff();
   SerialMon.println(F("Modem off"));
 
+  delay(1000);
+
   // sleep for 60 seconds
   ESP.deepSleep(60e6);
+
+  // TODO:
+  // - bug, it stoped to work but still with batery power;
+  // - started to work again after batery
+  // - may turn modem off/on on setup()?;
 }
