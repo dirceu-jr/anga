@@ -12,9 +12,9 @@ With community and educational purposes in mind, information about suppliers, co
 
 # Status
 
-The firmware is begin written to send data to <a href="https://thingspeak.mathworks.com/channels/3021849">Thingspeak</a> over cellular network.
+The prototype is sending CO readings/data to <a href="https://thingspeak.mathworks.com/channels/3021849">ThingSpeak</a> over cellular network (NB-IoT).
 
-SDS011 and CO sensors are in hand while VOC Sensor is en route.
+SDS011 and CO sensors are in hand while VOC and BME688 sensors are en route.
 
 # Hardware
 
