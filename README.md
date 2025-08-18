@@ -14,13 +14,14 @@ With community and educational purposes in mind, information about suppliers, co
 
 The prototype is sending CO readings/data to <a href="https://thingspeak.mathworks.com/channels/3021849">ThingSpeak</a> over cellular network (NB-IoT).
 
-SDS011 and CO sensors are in hand while VOC and BME688 sensors are en route.
+SDS011, CO sensor, VOC and BME688 sensors are in hand.
 
 # Hardware
 
 This is the probably hardware that will be used:
 
 - Mainboard: [LILYGO® TTGO T-SIM7000G](https://pt.aliexpress.com/item/4000542688096.html)
+- Or: [LILYGO® TTGO T-A7670G](https://pt.aliexpress.com/item/1005003036514769.html)
 
 <img width="260" src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/lilygo-t-sim7000g.webp">
 
