@@ -33,10 +33,6 @@ This is the probably hardware that will be used:
 
 <img width="260" src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/co.avif">
 
-- <a href="https://www.dfrobot.com/product-2707.html">DFRobot VOC Gas Sensor</a>
-
-<img width="260" src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/SEN0566_Main_01_1220x813.jpg">
-
 - <a href="https://www.dfrobot.com/product-2871.html">Gravity: BME688</a>
 
 <img width="260" src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/BME688.avif">
