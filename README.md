@@ -20,8 +20,8 @@ SDS011, CO sensor, VOC and BME688 sensors are in hand. NO2 and another PM2.5  se
 
 This is the probably hardware that will be used:
 
-- Mainboard: [LILYGO® TTGO T-SIM7000G](https://pt.aliexpress.com/item/4000542688096.html)
-- Or: [LILYGO® TTGO T-A7670G](https://pt.aliexpress.com/item/1005003036514769.html)
+- Mainboard: [LILYGO® TTGO T-SIM7000G](https://pt.aliexpress.com/item/4000542688096.html) (NB-IoT)
+- Or: [LILYGO® TTGO T-A7670G](https://pt.aliexpress.com/item/1005003036514769.html) (Cat-1)
 
 <img width="260" src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/lilygo-t-sim7000g.webp">
 
