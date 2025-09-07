@@ -12,9 +12,9 @@ With community and educational purposes in mind, information about suppliers, co
 
 # Status
 
-The prototype is sending CO readings/data to <a href="https://thingspeak.mathworks.com/channels/3021849">ThingSpeak</a> over cellular network (NB-IoT).
+Prototypes is sending CO and BME688 readings/data to <a href="https://thingspeak.mathworks.com/channels/3021849">ThingSpeak</a> over cellular network (NB-IoT).
 
-SDS011, CO sensor, VOC and BME688 sensors are in hand.
+SDS011, CO sensor, VOC and BME688 sensors are in hand. NO2 and another PM2.5  sensors aquired.
 
 # Hardware
 
@@ -29,10 +29,14 @@ This is the probably hardware that will be used:
 
 <img width="260" src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/sds-011.avif">
 
-- <a href="https://www.dfrobot.com/product-2508.html">DFRobot CO (and potentially other gases)</a>
+- <a href="https://www.dfrobot.com/product-2508.html">DFRobot CO (and potentially NO2 and other gases)</a>
 
 <img width="260" src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/co.avif">
 
 - <a href="https://www.dfrobot.com/product-2871.html">Gravity: BME688</a>
 
 <img width="260" src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/BME688.avif">
+
+- <a href="https://www.dfrobot.com/product-2439.html">Gravity: PM2.5 Air Quality Sensor</a>
+
+<img width="260" src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/pm25.webp">
