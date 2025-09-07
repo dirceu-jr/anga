@@ -12,9 +12,9 @@ With community and educational purposes in mind, information about suppliers, co
 
 # Status
 
-Prototypes is sending CO and BME688 readings/data to <a href="https://thingspeak.mathworks.com/channels/3021849">ThingSpeak</a> over cellular network (NB-IoT).
+The prototypes are sending CO and BME688 readings/data to ThingSpeak over a cellular network (NB-IoT).
 
-SDS011, CO sensor, VOC and BME688 sensors are in hand. NO2 and another PM2.5  sensors aquired.
+SDS011, CO sensor, VOC and BME688 sensors are in hand. NO2 and another PM2.5 sensor aquired.
 
 # Hardware
 
