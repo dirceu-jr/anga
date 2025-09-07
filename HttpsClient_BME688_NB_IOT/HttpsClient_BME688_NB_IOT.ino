@@ -5,7 +5,9 @@
 // - Check/disable GPS - DONE;
 // - ESP32 deep sleep - DONE;
 // - Bosch BME68x data - DONE;
-// - BME68x save state / get state;
+// - Modem work better without deep-sleep - DONE;
+// - Refresh air inside the case (power on fan for some time) - DONE;
+// - May deep-sleep in errors (so a "reboot" occurs);
 
 // Select your modem:
 #define TINY_GSM_MODEM_SIM7000SSL
@@ -20,7 +22,7 @@
 // Chips without internal buffering (A6/A7, ESP8266, M590)
 // need enough space in the buffer for the entire response
 // else data will be lost (and the http library will fail).
-#define TINY_GSM_RX_BUFFER 1024
+// #define TINY_GSM_RX_BUFFER 1024
 
 // See all AT commands, if wanted
 // #define DUMP_AT_COMMANDS
@@ -47,13 +49,9 @@ const char* writeAPIKey = "7OETW4UYYTX3NAZF";
 #include <ArduinoHttpClient.h>
 
 #include <bsec2.h>
-#include <Preferences.h>
 
 // Create an object of the class Bsec2
 Bsec2 envSensor;
-
-// Create an object of the class Preferences
-Preferences prefs;
 
 // LP (low power) = 3 seconds / ULP (ultra low power) = 300 seconds
 #define SAMPLE_RATE BSEC_SAMPLE_RATE_ULP
@@ -85,6 +83,7 @@ HttpClient          http(client, server, port);
 #define PIN_RX      26
 #define PWR_PIN     4
 #define LED_PIN     12
+#define FAN_PIN     0
 
 void modemPowerOn() {
   pinMode(PWR_PIN, OUTPUT);
@@ -96,8 +95,9 @@ void modemPowerOn() {
 void modemPowerOff() {
   pinMode(PWR_PIN, OUTPUT);
   digitalWrite(PWR_PIN, LOW);
-  delay(1500); //Datasheet Ton mintues = 1.2S
+  delay(1200); //Datasheet Ton mintues = 1.2S
   digitalWrite(PWR_PIN, HIGH);
+  pinMode(PWR_PIN, INPUT);
 }
 
 void modemHardReset() {
@@ -106,34 +106,6 @@ void modemHardReset() {
   delay(5000); // Wait 5 seconds for complete power down
   modemPowerOn();
   delay(5000); // Wait 5 seconds for complete power up
-}
-
-void saveBsecState() {
-  uint8_t state[BSEC_MAX_STATE_BLOB_SIZE];
-  if (envSensor.getState(state)) {
-    prefs.begin("bsec", false);
-    prefs.putBytes("state", state, BSEC_MAX_STATE_BLOB_SIZE);
-    prefs.end();
-    SerialMon.println("BSEC state saved.");
-  } else {
-    SerialMon.println("Failed to get BSEC state.");
-  }
-}
-
-void restoreBsecState() {
-  uint8_t state[BSEC_MAX_STATE_BLOB_SIZE];
-  prefs.begin("bsec", true);
-  size_t len = prefs.getBytes("state", state, BSEC_MAX_STATE_BLOB_SIZE);
-  prefs.end();
-  if (len == BSEC_MAX_STATE_BLOB_SIZE) {
-    if (envSensor.setState(state)) {
-      SerialMon.println("BSEC state restored.");
-    } else {
-      SerialMon.println("Failed to restore BSEC state.");
-    }
-  } else {
-    SerialMon.println("No BSEC state found.");
-  }
 }
 
 void checkBsecStatus(Bsec2 bsec) {
@@ -158,8 +130,8 @@ void startEnvSensor() {
     // BSEC_OUTPUT_RAW_PRESSURE,
     // BSEC_OUTPUT_RAW_HUMIDITY,
     // BSEC_OUTPUT_RAW_GAS,
-    // BSEC_OUTPUT_STABILIZATION_STATUS,
-    // BSEC_OUTPUT_RUN_IN_STATUS,
+    BSEC_OUTPUT_STABILIZATION_STATUS,
+    BSEC_OUTPUT_RUN_IN_STATUS,
     BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE,
     BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY,
     BSEC_OUTPUT_STATIC_IAQ,
@@ -168,6 +140,9 @@ void startEnvSensor() {
     // BSEC_OUTPUT_GAS_PERCENTAGE,
     BSEC_OUTPUT_COMPENSATED_GAS
   };
+
+  // for I2C
+  Wire.begin();
 
   // Initialize the library and interfaces
   if (!envSensor.begin(BME68X_I2C_ADDR_HIGH, Wire)) {
@@ -188,8 +163,6 @@ void startEnvSensor() {
   if (!envSensor.updateSubscription(sensorList, ARRAY_LEN(sensorList), SAMPLE_RATE)) {
     checkBsecStatus(envSensor);
   }
-
-  restoreBsecState();
 
   Serial.println("BSEC library version " + \
     String(envSensor.version.major) + "." \
@@ -236,12 +209,12 @@ EnvSensorData readSensorData() {
       // case BSEC_OUTPUT_RAW_GAS:
       //   Serial.println("\tGas resistance = " + String(output.signal));
       //   break;
-      // case BSEC_OUTPUT_STABILIZATION_STATUS:
-      //   Serial.println("\tStabilization status = " + String(output.signal));
-      //   break;
-      // case BSEC_OUTPUT_RUN_IN_STATUS:
-      //   Serial.println("\tRun in status = " + String(output.signal));
-      //   break;
+      case BSEC_OUTPUT_STABILIZATION_STATUS:
+        Serial.println("\tStabilization status = " + String(output.signal));
+        break;
+      case BSEC_OUTPUT_RUN_IN_STATUS:
+        Serial.println("\tRun in status = " + String(output.signal));
+        break;
       case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE:
         data.temperature = output.signal;
         Serial.println("\tCompensated temperature = " + String(output.signal));
@@ -281,6 +254,10 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);
 
+  // Fan off
+  pinMode(FAN_PIN, OUTPUT);
+  digitalWrite(FAN_PIN, LOW);
+
   // Set console baud rate
   SerialMon.begin(115200);
   delay(1000);
@@ -289,9 +266,6 @@ void setup() {
   SerialMon.println(F("Disabling Wi-Fi and Bluetooth..."));
   esp_wifi_stop();
   esp_bt_controller_disable();
-
-  // for I2C
-  Wire.begin();
 
   // BSEC initialization
   startEnvSensor();
@@ -311,7 +285,7 @@ void setup() {
   modem.init();
 
   // update modem clock
-  modem.sendAT("+CCLK=\"25/08/22,22:38:00\"");
+  modem.sendAT("+CCLK=\"25/09/05,22:38:00\"");
 
   // Disable GPS
   modem.disableGPS();
@@ -354,7 +328,19 @@ void setup() {
 }
 
 void loop() {
-  // modem.gprsConnect(apn, gprsUser, gprsPass);
+  unsigned long loop_start_time = millis();
+  SerialMon.println("Loop start...");
+
+  // Refresh Air (fan on for 10 seconds)
+  digitalWrite(FAN_PIN, HIGH);
+  delay(10000);
+  digitalWrite(FAN_PIN, LOW);
+
+  // Read sensor data
+  EnvSensorData reading = readSensorData();
+
+  modemPowerOn();
+  delay(5000);
 
   SerialMon.print("Signal quality: ");
   SerialMon.println(modem.getSignalQuality());
@@ -393,11 +379,16 @@ void loop() {
   http.setTimeout(30000);
   http.connectionKeepAlive(); // this may be needed for HTTPS
 
-  // Read sensor data
-  EnvSensorData reading = readSensorData();
-
   // Construct the resource URL
-  String resource = String("/update?api_key=") + writeAPIKey + "&field1=" + String(reading.iaq) + "&field2=" + String(reading.iaq_accuracy) + "&field3=" + String(reading.temperature) + "&field4=" + String(reading.humidity) + "&field5=" + String(reading.static_iaq) + "&field6=" + String(reading.co2_equivalent) + "&field7=" + String(reading.breath_voc_equivalent) + "&field8=" + String(reading.compensated_gas);
+  String resource = String("/update?api_key=") + writeAPIKey +
+                    "&field1=" + String(reading.iaq) +
+                    "&field2=" + String(reading.iaq_accuracy) +
+                    "&field3=" + String(reading.temperature) +
+                    "&field4=" + String(reading.humidity) +
+                    "&field5=" + String(reading.static_iaq) +
+                    "&field6=" + String(reading.co2_equivalent) +
+                    "&field7=" + String(reading.breath_voc_equivalent) +
+                    "&field8=" + String(reading.compensated_gas);
 
   SerialMon.print(F("Performing HTTPS GET request... "));
   int err = http.get(resource);
@@ -420,9 +411,6 @@ void loop() {
   SerialMon.println(F("Response:"));
   SerialMon.println(body);
 
-  SerialMon.print(F("Body length is: "));
-  SerialMon.println(body.length());
-
   // Shutdown
 
   http.stop();
@@ -441,12 +429,20 @@ void loop() {
   modemPowerOff();
   SerialMon.println(F("Modem off"));
 
-  // Set to LOW to avoid the modem to turn ON after esp32 enter deep sleep
-  digitalWrite(PWR_PIN, LOW);
+  unsigned long loop_duration = millis() - loop_start_time;
 
-  // save bme688 data
-  saveBsecState();
+  const unsigned long total_cycle_time_ms = 300 * 1000; // 5 minutes in milliseconds
+  long sleep_duration_ms = total_cycle_time_ms - loop_duration;
 
-  // sleep for 6 minutes
-  ESP.deepSleep(360e6);
+  if (sleep_duration_ms < 0) {
+    sleep_duration_ms = 0; // Avoid negative sleep time
+  }
+
+  // Light Sleep for the remainder of the 5-minute cycle
+  esp_sleep_enable_timer_wakeup(sleep_duration_ms * 1000); // Time in microseconds
+  esp_light_sleep_start();
+
+  // Sleep for 5 seconds (for testing purposes)
+  // delay(5000);
+  \
 }
