@@ -20,6 +20,14 @@
 #define TINY_GSM_DEBUG SerialMon
 // #define LOGGING  // <- Logging is for the HTTP library
 
+#include "esp_wifi.h"
+#include "esp_bt.h"
+
+#include <TinyGsmClient.h>
+#include <ArduinoHttpClient.h>
+
+#include "DFRobot_MultiGasSensor.h"
+
 // Your GPRS credentials, if any
 const char apn[] = "iot.datatem.com.br";
 const char gprsUser[] = "datatem";
@@ -30,14 +38,6 @@ const char server[] = "api.thingspeak.com";
 const int port = 443;
 
 const char* writeAPIKey = "NEC73XT4UKMIPOZM";
-
-#include "esp_wifi.h"
-#include "esp_bt.h"
-
-#include <TinyGsmClient.h>
-#include <ArduinoHttpClient.h>
-
-#include "DFRobot_MultiGasSensor.h"
 
 #define I2C_ADDRESS    0x74
 DFRobot_GAS_I2C gas(&Wire, I2C_ADDRESS);
@@ -167,7 +167,7 @@ void loop() {
   SerialMon.print("Waiting for network...");
   if (!modem.waitForNetwork()) {
     SerialMon.println(" fail");
-    delay(10000);
+    delay(60000);
     return;
   }
   SerialMon.println(" success");
@@ -184,7 +184,7 @@ void loop() {
     SerialMon.print(apn);
     if (!modem.gprsConnect(apn, gprsUser, gprsPass)) {
       SerialMon.println(" fail");
-      delay(10000);
+      delay(60000);
       return;
     }
     SerialMon.println(" success");
@@ -206,7 +206,7 @@ void loop() {
   if (err != 0) {
     SerialMon.print(F("failed to connect, error: "));
     SerialMon.println(err);
-    delay(10000);
+    delay(60000);
     return;
   }
 
@@ -214,7 +214,7 @@ void loop() {
   SerialMon.print(F("Response status code: "));
   SerialMon.println(status);
   if (!status) {
-    delay(10000);
+    delay(60000);
     return;
   }
 
