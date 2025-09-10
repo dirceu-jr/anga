@@ -1,13 +1,6 @@
 // TODO:
-// - Ping ThingSpeak Generic - DONE;
-// - Disable Wi-Fi - DONE;
-// - Disable Bluetooth - DONE;
-// - Check/disable GPS - DONE;
-// - ESP32 deep sleep - DONE;
-// - Bosch BME68x data - DONE;
-// - Modem work better without deep-sleep - DONE;
-// - Refresh air inside the case (power on fan for some time) - DONE;
 // - May deep-sleep in errors (so a "reboot" occurs);
+// - or a higher delay value before return;
 
 // Select your modem:
 #define TINY_GSM_MODEM_SIM7000SSL
@@ -249,6 +242,26 @@ EnvSensorData readSensorData() {
   return data;
 }
 
+void disconnectAndPowerModemOff() {
+  // Disconnect from the server
+  http.stop();
+  SerialMon.println(F("Server disconnected"));
+
+  // Disconnect from GPRS
+  modem.gprsDisconnect();
+  SerialMon.println(F("GPRS disconnected"));
+
+  // Power down the modem using AT command first
+  SerialMon.println(F("Powering down modem with AT command..."));
+  modem.sendAT("+CPOWD=1");
+  modem.waitResponse();
+
+  // Then turn off the modem power
+  SerialMon.println(F("Powering off modem..."));
+  modemPowerOff();
+  SerialMon.println(F("Modem off"));
+}
+
 void setup() {
   // Set LED OFF
   pinMode(LED_PIN, OUTPUT);
@@ -340,7 +353,7 @@ void loop() {
   EnvSensorData reading = readSensorData();
 
   modemPowerOn();
-  delay(5000);
+  delay(5000); // Wait for modem to boot
 
   SerialMon.print("Signal quality: ");
   SerialMon.println(modem.getSignalQuality());
@@ -348,7 +361,7 @@ void loop() {
   SerialMon.print("Waiting for network...");
   if (!modem.waitForNetwork()) {
     SerialMon.println(" fail");
-    delay(10000);
+    delay(60000);
     return;
   }
   SerialMon.println(" success");
@@ -365,7 +378,7 @@ void loop() {
     SerialMon.print(apn);
     if (!modem.gprsConnect(apn, gprsUser, gprsPass)) {
       SerialMon.println(" fail");
-      delay(10000);
+      delay(60000);
       return;
     }
     SerialMon.println(" success");
@@ -395,7 +408,7 @@ void loop() {
   if (err != 0) {
     SerialMon.print(F("failed to connect, error: "));
     SerialMon.println(err);
-    delay(10000);
+    delay(60000);
     return;
   }
 
@@ -403,7 +416,7 @@ void loop() {
   SerialMon.print(F("Response status code: "));
   SerialMon.println(status);
   if (!status) {
-    delay(10000);
+    delay(60000);
     return;
   }
 
@@ -412,22 +425,7 @@ void loop() {
   SerialMon.println(body);
 
   // Shutdown
-
-  http.stop();
-  SerialMon.println(F("Server disconnected"));
-
-  modem.gprsDisconnect();
-  SerialMon.println(F("GPRS disconnected"));
-
-  // Power down the modem using AT command first
-  SerialMon.println(F("Powering down modem with AT command..."));
-  modem.sendAT("+CPOWD=1");
-  modem.waitResponse();
-
-  // Then turn off the modem power
-  SerialMon.println(F("Powering off modem..."));
-  modemPowerOff();
-  SerialMon.println(F("Modem off"));
+  disconnectAndPowerModemOff();
 
   unsigned long loop_duration = millis() - loop_start_time;
 
