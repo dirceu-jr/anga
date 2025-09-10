@@ -415,7 +415,7 @@ void loop() {
   int status = http.responseStatusCode();
   SerialMon.print(F("Response status code: "));
   SerialMon.println(status);
-  if (!status) {
+  if (status <= 0) {
     delay(60000);
     return;
   }
