@@ -24,6 +24,14 @@
 #define TINY_GSM_DEBUG SerialMon
 // #define LOGGING  // <- Logging is for the HTTP library
 
+#include "esp_wifi.h"
+#include "esp_bt.h"
+
+#include <TinyGsmClient.h>
+#include <ArduinoHttpClient.h>
+
+#include <bsec2.h>
+
 // Your GPRS credentials, if any
 const char apn[] = "iot.datatem.com.br";
 const char gprsUser[] = "datatem";
@@ -34,14 +42,6 @@ const char server[] = "api.thingspeak.com";
 const int port = 443;
 
 const char* writeAPIKey = "7OETW4UYYTX3NAZF";
-
-#include "esp_wifi.h"
-#include "esp_bt.h"
-
-#include <TinyGsmClient.h>
-#include <ArduinoHttpClient.h>
-
-#include <bsec2.h>
 
 // Create an object of the class Bsec2
 Bsec2 envSensor;
