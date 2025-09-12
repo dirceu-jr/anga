@@ -70,12 +70,14 @@ TinyGsm        modem(SerialAT);
 TinyGsmClientSecure client(modem);
 HttpClient          http(client, server, port);
 
+int failed_connection_attempts = 0;
+
 #define UART_BAUD   115200
 #define PIN_TX      27
 #define PIN_RX      26
 #define PWR_PIN     4
 #define LED_PIN     12
-#define FAN_PIN     0
+#define FAN_PIN     2
 
 void modemPowerOn() {
   pinMode(PWR_PIN, OUTPUT);
@@ -102,15 +104,15 @@ void modemHardReset() {
 
 void checkBsecStatus(Bsec2 bsec) {
   if (bsec.status < BSEC_OK) {
-    Serial.println("BSEC error code : " + String(bsec.status));
+    SerialMon.println("BSEC error code : " + String(bsec.status));
   } else if (bsec.status > BSEC_OK) {
-    Serial.println("BSEC warning code : " + String(bsec.status));
+    SerialMon.println("BSEC warning code : " + String(bsec.status));
   }
 
   if (bsec.sensor.status < BME68X_OK) {
-    Serial.println("BME68X error code : " + String(bsec.sensor.status));
+    SerialMon.println("BME68X error code : " + String(bsec.sensor.status));
   } else if (bsec.sensor.status > BME68X_OK) {
-    Serial.println("BME68X warning code : " + String(bsec.sensor.status));
+    SerialMon.println("BME68X warning code : " + String(bsec.sensor.status));
   }
 }
 
@@ -156,7 +158,7 @@ void startEnvSensor() {
     checkBsecStatus(envSensor);
   }
 
-  Serial.println("BSEC library version " + \
+  SerialMon.println("BSEC library version " + \
     String(envSensor.version.major) + "." \
     + String(envSensor.version.minor) + "." \
     + String(envSensor.version.major_bugfix) + "." \
@@ -179,60 +181,60 @@ EnvSensorData readSensorData() {
     delay(100); // Small delay to avoid busy loop
   }
 
-  // Serial.println("BSEC outputs:\n\tTime stamp = " + String((int) (outputs->output[0].time_stamp / INT64_C(1000000))));
+  // SerialMon.println("BSEC outputs:\n\tTime stamp = " + String((int) (outputs->output[0].time_stamp / INT64_C(1000000))));
   for (uint8_t i = 0; i < outputs->nOutputs; i++) {
     const bsecData output  = outputs->output[i];
     switch (output.sensor_id) {
       case BSEC_OUTPUT_IAQ:
         data.iaq = output.signal;
         data.iaq_accuracy = output.accuracy;
-        Serial.println("\tIAQ = " + String(output.signal));
-        Serial.println("\tIAQ accuracy = " + String((int) output.accuracy));
+        SerialMon.println("\tIAQ = " + String(output.signal));
+        SerialMon.println("\tIAQ accuracy = " + String((int) output.accuracy));
         break;
       // case BSEC_OUTPUT_RAW_TEMPERATURE:
-      //   Serial.println("\tTemperature = " + String(output.signal));
+      //   SerialMon.println("\tTemperature = " + String(output.signal));
       //   break;
       // case BSEC_OUTPUT_RAW_PRESSURE:
-      //   Serial.println("\tPressure = " + String(output.signal));
+      //   SerialMon.println("\tPressure = " + String(output.signal));
       //   break;
       // case BSEC_OUTPUT_RAW_HUMIDITY:
-      //   Serial.println("\tHumidity = " + String(output.signal));
+      //   SerialMon.println("\tHumidity = " + String(output.signal));
       //   break;
       // case BSEC_OUTPUT_RAW_GAS:
-      //   Serial.println("\tGas resistance = " + String(output.signal));
+      //   SerialMon.println("\tGas resistance = " + String(output.signal));
       //   break;
       case BSEC_OUTPUT_STABILIZATION_STATUS:
-        Serial.println("\tStabilization status = " + String(output.signal));
+        SerialMon.println("\tStabilization status = " + String(output.signal));
         break;
       case BSEC_OUTPUT_RUN_IN_STATUS:
-        Serial.println("\tRun in status = " + String(output.signal));
+        SerialMon.println("\tRun in status = " + String(output.signal));
         break;
       case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE:
         data.temperature = output.signal;
-        Serial.println("\tCompensated temperature = " + String(output.signal));
+        SerialMon.println("\tCompensated temperature = " + String(output.signal));
         break;
       case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY:
         data.humidity = output.signal;
-        Serial.println("\tCompensated humidity = " + String(output.signal));
+        SerialMon.println("\tCompensated humidity = " + String(output.signal));
         break;
       case BSEC_OUTPUT_STATIC_IAQ:
         data.static_iaq = output.signal;
-        Serial.println("\tStatic IAQ = " + String(output.signal));
+        SerialMon.println("\tStatic IAQ = " + String(output.signal));
         break;
       case BSEC_OUTPUT_CO2_EQUIVALENT:
         data.co2_equivalent = output.signal;
-        Serial.println("\tCO2 Equivalent = " + String(output.signal));
+        SerialMon.println("\tCO2 Equivalent = " + String(output.signal));
         break;
       case BSEC_OUTPUT_BREATH_VOC_EQUIVALENT:
         data.breath_voc_equivalent = output.signal;
-        Serial.println("\tbVOC equivalent = " + String(output.signal));
+        SerialMon.println("\tbVOC equivalent = " + String(output.signal));
         break;
       // case BSEC_OUTPUT_GAS_PERCENTAGE:
-      //   Serial.println("\tGas percentage = " + String(output.signal));
+      //   SerialMon.println("\tGas percentage = " + String(output.signal));
       //   break;
       case BSEC_OUTPUT_COMPENSATED_GAS:
         data.compensated_gas = output.signal;
-        Serial.println("\tCompensated gas = " + String(output.signal));
+        SerialMon.println("\tCompensated gas = " + String(output.signal));
         break;
       default:
         break;
@@ -252,8 +254,7 @@ void disconnectAndPowerModemOff() {
 
   // Power down the modem using AT command first
   SerialMon.println(F("Powering down modem with AT command..."));
-  modem.sendAT("+CPOWD=1");
-  modem.waitResponse();
+  modem.poweroff();
 
   // Then turn off the modem power
   SerialMon.println(F("Powering off modem..."));
@@ -353,27 +354,24 @@ void setup() {
 
   // Set console baud rate
   SerialMon.begin(115200);
-  delay(1000);
+  delay(200);
 
   // BSEC initialization
   startEnvSensor();
 
-  // modem
+  // modem OFF/ON cycle
   modemHardReset();
 
   // Set GSM module baud rate
   SerialAT.begin(UART_BAUD, SERIAL_8N1, PIN_RX, PIN_TX);
-  delay(6000);
+  delay(200);
 
   // Restart takes quite some time
   // To skip it, call init() instead of restart()
-  // SerialMon.println("Restarting modem...");
-  // modem.restart();
-  SerialMon.println("Initializing modem...");
-  modem.init();
-
-  // update modem clock
-  modem.sendAT("+CCLK=\"25/09/05,22:38:00\"");
+  SerialMon.println("Restarting modem...");
+  modem.restart();
+  // SerialMon.println("Initializing modem...");
+  // modem.init();
 
   // Disable GPS
   modem.disableGPS();
@@ -383,10 +381,8 @@ void setup() {
   // Only in version 20200415 is there a function to control GPS power
   modem.sendAT("+SGPIO=0,4,1,0");
   if (modem.waitResponse(10000L) != 1) {
-    SerialMon.println(" SGPIO=0,4,1,0 false ");
+    SerialMon.println("SGPIO=0,4,1,0 false");
   }
-
-  delay(200);
 
   String name = modem.getModemName();
   SerialMon.println("Modem Name: " + name);
@@ -430,10 +426,22 @@ void loop() {
   // Connect to network, GPRS and send data
   bool success = connectAndSendData(reading);
 
+  // TODO:
+  // - may in case of error just skip this try, disconnect and go to sleep?;
+  // - or retry a few times before giving up?;
   if (!success) {
-    delay(60000);
+    failed_connection_attempts++;
+
+    disconnectAndPowerModemOff();
+
+    // wait 60 seconds sleeping before retry
+    esp_sleep_enable_timer_wakeup(60 * 1000000); // 60 seconds in microseconds
+    esp_light_sleep_start();
     return;
   }
+
+  // Reset counter on success
+  failed_connection_attempts = 0;
 
   // Shutdown
   disconnectAndPowerModemOff();
