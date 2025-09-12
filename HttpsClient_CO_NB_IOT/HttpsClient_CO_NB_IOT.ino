@@ -58,6 +58,7 @@ HttpClient    http(client, server, port);
 #define PIN_RX      26
 #define PWR_PIN     4
 #define LED_PIN     12
+#define FAN_PIN     2
 
 void modemPowerOn() {
   pinMode(PWR_PIN, OUTPUT);
@@ -82,6 +83,92 @@ void modemHardReset() {
   delay(5000); // Wait 5 seconds for complete power up
 }
 
+void refreshAir() {
+  // Refresh Air (fan on for 10 seconds)
+  digitalWrite(FAN_PIN, HIGH);
+  delay(10000);
+  digitalWrite(FAN_PIN, LOW);
+}
+
+bool connectAndSendData(String gasConcentration) {
+  SerialMon.print("Signal quality: ");
+  SerialMon.println(modem.getSignalQuality());
+
+  SerialMon.print("Waiting for network...");
+  if (!modem.waitForNetwork()) {
+    SerialMon.println(" fail");
+    return false;
+  }
+  SerialMon.println(" success");
+
+  if (modem.isNetworkConnected()) {
+    SerialMon.println("Network connected");
+  }
+
+  // GPRS connection parameters are usually set after network registration
+  if (modem.isGprsConnected()) {
+    SerialMon.println("GPRS already connected.");
+  } else {
+    SerialMon.print(F("Connecting to "));
+    SerialMon.print(apn);
+    if (!modem.gprsConnect(apn, gprsUser, gprsPass)) {
+      SerialMon.println(" fail");
+      return false;
+    }
+    SerialMon.println(" success");
+  }
+
+  if (modem.isGprsConnected()) {
+    SerialMon.println("GPRS connected.");
+  }
+
+  // Now try HTTP request
+  http.setTimeout(30000);
+  http.connectionKeepAlive(); // this may be needed for HTTPS
+
+  // Construct the resource URL
+  String resource = String("/update?api_key=") + writeAPIKey + "&field1=" + gasConcentration;
+
+  SerialMon.print(F("Performing HTTPS GET request... "));
+  int err = http.get(resource);
+  if (err != 0) {
+    SerialMon.print(F("failed to connect, error: "));
+    SerialMon.println(err);
+    return false;
+  }
+
+  int status = http.responseStatusCode();
+  SerialMon.print(F("Response status code: "));
+  SerialMon.println(status);
+  if (status <= 0) {
+    return false;
+  }
+
+  String body = http.responseBody();
+  SerialMon.println(F("Response:"));
+  SerialMon.println(body);
+
+  return true;
+}
+
+void disconnectAndShutdown() {
+  http.stop();
+  SerialMon.println(F("Server disconnected"));
+
+  modem.gprsDisconnect();
+  SerialMon.println(F("GPRS disconnected"));
+
+  // Power down the modem using AT command first
+  SerialMon.println(F("Powering down modem with AT command..."));
+  modem.sendAT("+CPOWD=1");
+  modem.waitResponse();
+
+  // Then turn off the modem power
+  SerialMon.println(F("Powering off modem..."));
+  modemPowerOff();
+  SerialMon.println(F("Modem off"));
+}
+
 void setup() {
   // Disable Wi-Fi and Bluetooth
   esp_wifi_stop();
@@ -91,6 +178,10 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);
 
+  // Fan OFF
+  pinMode(FAN_PIN, OUTPUT);
+  digitalWrite(FAN_PIN, LOW);
+
   // Set console baud rate
   SerialMon.begin(115200);
   delay(1000);
@@ -99,11 +190,11 @@ void setup() {
   // Mode of obtaining data: the main controller needs to request the sensor for data
   gas.changeAcquireMode(gas.PASSIVITY);
   delay(1000);
+
   // Turn on temperature compensation
   gas.setTempCompensation(gas.ON);
 
-  // modem
-  SerialMon.println(F("Power modem on..."));
+  // modem ON
   modemHardReset();
 
   // Set GSM module baud rate
@@ -118,7 +209,7 @@ void setup() {
   modem.init();
 
   // update modem clock
-  modem.sendAT("+CCLK=\"25/09/07,01:29:00\"");
+  // modem.sendAT("+CCLK=\"25/09/07,01:29:00\"");
 
   // Disable GPS
   modem.disableGPS();
@@ -161,84 +252,18 @@ void setup() {
 }
 
 void loop() {
-  SerialMon.print("Signal quality: ");
-  SerialMon.println(modem.getSignalQuality());
+  refreshAir();
 
-  SerialMon.print("Waiting for network...");
-  if (!modem.waitForNetwork()) {
-    SerialMon.println(" fail");
+  String gasConcentration = String(gas.readGasConcentrationPPM());
+
+  bool success = connectAndSendData(gasConcentration);
+  if (!success) {
     delay(60000);
     return;
   }
-  SerialMon.println(" success");
-
-  if (modem.isNetworkConnected()) {
-    SerialMon.println("Network connected");
-  }
-
-  // GPRS connection parameters are usually set after network registration
-  if (modem.isGprsConnected()) {
-    SerialMon.println("GPRS already connected.");
-  } else {
-    SerialMon.print(F("Connecting to "));
-    SerialMon.print(apn);
-    if (!modem.gprsConnect(apn, gprsUser, gprsPass)) {
-      SerialMon.println(" fail");
-      delay(60000);
-      return;
-    }
-    SerialMon.println(" success");
-  }
-
-  if (modem.isGprsConnected()) {
-    SerialMon.println("GPRS connected.");
-  }
-
-  // Now try HTTP request
-  http.setTimeout(30000);
-  http.connectionKeepAlive(); // this may be needed for HTTPS
-
-  // Construct the resource URL
-  String resource = String("/update?api_key=") + writeAPIKey + "&field1=" + String(gas.readGasConcentrationPPM());
-
-  SerialMon.print(F("Performing HTTPS GET request... "));
-  int err = http.get(resource);
-  if (err != 0) {
-    SerialMon.print(F("failed to connect, error: "));
-    SerialMon.println(err);
-    delay(60000);
-    return;
-  }
-
-  int status = http.responseStatusCode();
-  SerialMon.print(F("Response status code: "));
-  SerialMon.println(status);
-  if (!status) {
-    delay(60000);
-    return;
-  }
-
-  String body = http.responseBody();
-  SerialMon.println(F("Response:"));
-  SerialMon.println(body);
 
   // Shutdown
-
-  http.stop();
-  SerialMon.println(F("Server disconnected"));
-
-  modem.gprsDisconnect();
-  SerialMon.println(F("GPRS disconnected"));
-
-  // Power down the modem using AT command first
-  SerialMon.println(F("Powering down modem with AT command..."));
-  modem.sendAT("+CPOWD=1");
-  modem.waitResponse();
-
-  // Then turn off the modem power
-  SerialMon.println(F("Powering off modem..."));
-  modemPowerOff();
-  SerialMon.println(F("Modem off"));
+  disconnectAndShutdown();
 
   // sleep for 5 minutes
   ESP.deepSleep(300e6);
