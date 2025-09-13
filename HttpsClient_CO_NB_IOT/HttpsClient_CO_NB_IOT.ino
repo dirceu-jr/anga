@@ -151,7 +151,7 @@ bool connectAndSendData(String gasConcentration) {
   return true;
 }
 
-void disconnectAndShutdown() {
+void disconnectAndPowerModemOff() {
   http.stop();
   SerialMon.println(F("Server disconnected"));
 
@@ -160,8 +160,7 @@ void disconnectAndShutdown() {
 
   // Power down the modem using AT command first
   SerialMon.println(F("Powering down modem with AT command..."));
-  modem.sendAT("+CPOWD=1");
-  modem.waitResponse();
+  modem.poweroff();
 
   // Then turn off the modem power
   SerialMon.println(F("Powering off modem..."));
@@ -209,7 +208,7 @@ void setup() {
   modem.init();
 
   // update modem clock
-  // modem.sendAT("+CCLK=\"25/09/07,01:29:00\"");
+  modem.sendAT("+CCLK=\"25/09/07,01:29:00\"");
 
   // Disable GPS
   modem.disableGPS();
@@ -257,14 +256,14 @@ void loop() {
   String gasConcentration = String(gas.readGasConcentrationPPM());
 
   bool success = connectAndSendData(gasConcentration);
-  if (!success) {
-    delay(60000);
-    return;
+
+  disconnectAndPowerModemOff();
+
+  if (success) {
+    // sleep for 5 minutes
+    ESP.deepSleep(300e6);
+  } else {
+    // sleep for 1 minute
+    ESP.deepSleep(60e6);
   }
-
-  // Shutdown
-  disconnectAndShutdown();
-
-  // sleep for 5 minutes
-  ESP.deepSleep(300e6);
 }
