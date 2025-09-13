@@ -426,13 +426,13 @@ void loop() {
   // Connect to network, GPRS and send data
   bool success = connectAndSendData(reading);
 
+  disconnectAndPowerModemOff();
+
   // TODO:
   // - may in case of error just skip this try, disconnect and go to sleep?;
   // - or retry a few times before giving up?;
   if (!success) {
     failed_connection_attempts++;
-
-    disconnectAndPowerModemOff();
 
     // wait 60 seconds sleeping before retry
     esp_sleep_enable_timer_wakeup(60 * 1000000); // 60 seconds in microseconds
@@ -442,9 +442,6 @@ void loop() {
 
   // Reset counter on success
   failed_connection_attempts = 0;
-
-  // Shutdown
-  disconnectAndPowerModemOff();
 
   // Calculate elapsed time
   unsigned long loop_duration = millis() - loop_start_time;
