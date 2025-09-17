@@ -12,9 +12,11 @@ With community and educational purposes in mind, information about suppliers, co
 
 # Status
 
-The prototypes are sending CO and BME688 readings/data to ThingSpeak over a cellular network (NB-IoT).
+The prototypes are sending CO, NO2 and BME688 readings/data to ThingSpeak over a cellular network (NB-IoT).
 
-SDS011, CO sensor, VOC and BME688 sensors are in hand. NO2 and another PM2.5 sensor aquired.
+PM2.5, CO, NO2, VOC and BME688 sensors are in hand.
+
+<img width="320" src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/1758142216272.jpg">
 
 # Hardware
 
@@ -24,10 +26,6 @@ This is the probably hardware that will be used:
 - Or: [LILYGO® TTGO T-A7670G](https://pt.aliexpress.com/item/1005003036514769.html) (Cat-1)
 
 <img width="260" src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/lilygo-t-sim7000g.webp">
-
-- SDS011
-
-<img width="260" src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/sds-011.avif">
 
 - <a href="https://www.dfrobot.com/product-2508.html">DFRobot CO (and potentially NO2 and other gases)</a>
 
