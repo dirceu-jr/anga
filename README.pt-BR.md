@@ -44,8 +44,8 @@ Este é o hardware que provavelmente será usado:
 
 # Dados em tempo real
 
-<iframe width="380" height="260" src="https://thingspeak.mathworks.com/channels/3022878/charts/1?results=60&title=CO"></iframe>
+<iframe width="380" height="260" src="https://thingspeak.mathworks.com/channels/3022878/charts/1?results=60&title=CO&width=380"></iframe>
 
-<iframe width="380" height="260" src="https://thingspeak.mathworks.com/channels/3022878/charts/2?results=60&title=NO2"></iframe>
+<iframe width="380" height="260" src="https://thingspeak.mathworks.com/channels/3022878/charts/2?results=60&title=NO2&width=380"></iframe>
 
-<iframe width="380" height="260" src="https://thingspeak.mathworks.com/channels/3022878/charts/4?results=60&title=PM2.5"></iframe>
+<iframe width="380" height="260" src="https://thingspeak.mathworks.com/channels/3022878/charts/4?results=60&title=PM2.5&width=380"></iframe>
