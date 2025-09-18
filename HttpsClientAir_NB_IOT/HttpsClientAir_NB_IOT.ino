@@ -1,4 +1,4 @@
-// Select your modem:
+// Select the modem
 #define TINY_GSM_MODEM_SIM7000SSL
 
 // Set serial for debug console (to the Serial Monitor, default speed 115200)
@@ -104,32 +104,15 @@ void refreshAir() {
 Readings getReadings() {
   Readings data;
 
+  SerialMon.println("CO type: " + CO.queryGasType());
+  SerialMon.println("NO2 type: " + NO2.queryGasType());
+
   data.co = CO.readGasConcentrationPPM();
   data.no2 = NO2.readGasConcentrationPPM();
 
   particle.awake();
-  delay(3000);
+  delay(10000);
   // delay(30000);
-
-  // uint16_t PM1_0 = particle.gainParticleConcentration_ugm3(PARTICLE_PM1_0_STANDARD);
-  // uint16_t PM2_5 = particle.gainParticleConcentration_ugm3(PARTICLE_PM2_5_STANDARD);
-  // uint16_t PM10 = particle.gainParticleConcentration_ugm3(PARTICLE_PM10_STANDARD);
-
-  // SerialMon.println("STANDARD Readings: ");
-  // SerialMon.println(PM1_0);
-  // SerialMon.println(PM2_5);
-  // SerialMon.println(PM10);
-  // SerialMon.println("end");
-
-  // uint16_t PM1_0A = particle.gainParticleConcentration_ugm3(PARTICLE_PM1_0_ATMOSPHERE);
-  // uint16_t PM2_5A = particle.gainParticleConcentration_ugm3(PARTICLE_PM2_5_ATMOSPHERE);
-  // uint16_t PM10A = particle.gainParticleConcentration_ugm3(PARTICLE_PM10_ATMOSPHERE);
-
-  // SerialMon.println("ATMOSPHERE Readings: ");
-  // SerialMon.println(PM1_0A);
-  // SerialMon.println(PM2_5A);
-  // SerialMon.println(PM10A);
-  // SerialMon.println("end");
 
   data.pm1 = particle.gainParticleConcentration_ugm3(PARTICLE_PM1_0_STANDARD);
   data.pm25 = particle.gainParticleConcentration_ugm3(PARTICLE_PM2_5_STANDARD);
@@ -202,6 +185,7 @@ bool connectAndSendData(Readings readings) {
 }
 
 void disconnectAndPowerModemOff() {
+  // Disconnect
   http.stop();
   SerialMon.println(F("Server disconnected"));
 
@@ -211,6 +195,24 @@ void disconnectAndPowerModemOff() {
   // Power down the modem using AT command first
   SerialMon.println(F("Powering down modem"));
   modem.poweroff();
+
+  // Disable I2C
+  Wire.end();
+}
+
+// Function to recover I2C bus if stuck
+void i2c_recover() {
+  pinMode(SDA, INPUT_PULLUP);
+  pinMode(SCL, INPUT_PULLUP);
+
+  // https://www.forward.com.au/pfod/ArduinoProgramming/I2C_ClearBus/index.html
+  // A "9th clock pulse" on SCL is required to un-stick the bus if a device is holding SDA low.
+  for (int i = 0; i < 10 && digitalRead(SDA) == LOW; i++) {
+    pinMode(SCL, OUTPUT);
+    digitalWrite(SCL, HIGH);
+    digitalWrite(SCL, LOW);
+    pinMode(SCL, INPUT_PULLUP);
+  }
 }
 
 void setup() {
@@ -226,13 +228,17 @@ void setup() {
   pinMode(FAN_PIN, OUTPUT);
   digitalWrite(FAN_PIN, LOW);
 
-  // PM2.5 low power
+  // PM2.5 sensor low power
   particle.setLowpower();
 
   // Set console baud rate
   SerialMon.begin(115200);
   delay(1000);
 
+  // Recover I2C bus after deep sleep
+  i2c_recover();
+
+  // Start I2C
   Wire.begin();
 
   // gas sensor
@@ -245,8 +251,9 @@ void setup() {
   CO.setTempCompensation(CO.ON);
   NO2.setTempCompensation(NO2.ON);
 
+  // print pm25 sensor firmware version
   uint8_t version = particle.gainVersion();
-  Serial.print("particle version is: ");
+  Serial.print("Particle version is: ");
   Serial.println(version);
 
   // modem ON
@@ -264,7 +271,7 @@ void setup() {
   modem.init();
 
   // update modem clock
-  modem.sendAT("+CCLK=\"25/09/07,01:29:00\"");
+  modem.sendAT("+CCLK=\"25/09/17,22:10:00\"");
 
   // Disable GPS
   modem.disableGPS();
@@ -279,6 +286,7 @@ void setup() {
 
   delay(200);
 
+  // print modem info
   String name = modem.getModemName();
   SerialMon.println("Modem Name: " + name);
 
@@ -320,9 +328,13 @@ void loop() {
   disconnectAndPowerModemOff();
 
   if (success) {
+    SerialMon.println("Entering deep sleep for success");
     // sleep for 5 minutes
-    ESP.deepSleep(300e6);
+    // ESP.deepSleep(300e6);
+    // sleep for 30 seconds
+    ESP.deepSleep(30e6);
   } else {
+    SerialMon.println("Entering deep sleep for error");
     // sleep for 1 minute
     ESP.deepSleep(60e6);
   }
