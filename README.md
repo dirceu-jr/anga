@@ -1,5 +1,7 @@
 # About
 
+[Ler em Português](https://dirceu-jr.github.io/anga/README.pt-BR)
+
 <img src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/nature_people_FILL0_wght400_GRAD0_opsz48.svg" align="middle"> <img src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/water_FILL0_wght400_GRAD0_opsz48.svg" align="middle"> <img src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/antenna_FILL0_wght400_GRAD0_opsz48.svg" align="middle">
 
 I live in [Curitiba city](https://en.wikipedia.org/wiki/Curitiba), some say _the most ecological Brazilian city_.
@@ -13,8 +15,6 @@ With community and educational purposes in mind, information about suppliers, co
 # Status
 
 The prototypes are sending CO, NO2 and BME688 readings/data to ThingSpeak over a cellular network (NB-IoT).
-
-PM2.5, CO, NO2, VOC and BME688 sensors are in hand.
 
 This is the prototype with NO2, PM2.5 and CO sensors installed:
 
