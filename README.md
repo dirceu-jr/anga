@@ -40,3 +40,11 @@ This is the probably hardware that will be used:
 - <a href="https://www.dfrobot.com/product-2439.html">Gravity: PM2.5 Air Quality Sensor</a>
 
 <img width="260" src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/pm25.webp">
+
+# Real-Time Data
+
+<iframe width="380" height="260" src="https://thingspeak.mathworks.com/channels/3022878/charts/1?results=60&title=CO"></iframe>
+
+<iframe width="380" height="260" src="https://thingspeak.mathworks.com/channels/3022878/charts/2?results=60&title=NO2"></iframe>
+
+<iframe width="380" height="260" src="https://thingspeak.mathworks.com/channels/3022878/charts/4?results=60&title=PM2.5"></iframe>
