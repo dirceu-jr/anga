@@ -16,6 +16,8 @@ The prototypes are sending CO, NO2 and BME688 readings/data to ThingSpeak over a
 
 PM2.5, CO, NO2, VOC and BME688 sensors are in hand.
 
+This is the prototype with NO2, PM2.5 and CO sensors installed:
+
 <img width="320" src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/1758142216272.jpg">
 
 # Hardware
