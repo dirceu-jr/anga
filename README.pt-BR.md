@@ -4,8 +4,7 @@
 
 <img src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/nature_people_FILL0_wght400_GRAD0_opsz48.svg" align="middle"> <img src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/water_FILL0_wght400_GRAD0_opsz48.svg" align="middle"> <img src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/antenna_FILL0_wght400_GRAD0_opsz48.svg" align="middle">
 
-I live in [Curitiba city](https://en.wikipedia.org/wiki/Curitiba), some say _the most ecological Brazilian city_.
-Eu more em [Curitiba](https://en.wikipedia.org/wiki/Curitiba), a cidade brasileira mais ecológica.
+Eu moro em [Curitiba](https://en.wikipedia.org/wiki/Curitiba), a cidade brasileira mais ecológica.
 
 Os problemas socioambientais urbanos identificados em Curitiba incluem poluição do ar, poluição da água e degradação ambiental.
 
