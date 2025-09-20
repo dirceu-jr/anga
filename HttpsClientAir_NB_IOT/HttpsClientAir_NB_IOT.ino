@@ -29,6 +29,8 @@
 #include "DFRobot_MultiGasSensor.h"
 #include "DFRobot_AirQualitySensor.h"
 
+// #include <I2C_ClearBus.h>
+
 // Your GPRS credentials, if any
 const char apn[] = "iot.datatem.com.br";
 const char gprsUser[] = "datatem";
@@ -74,14 +76,14 @@ struct Readings {
 void modemPowerOn() {
   pinMode(PWR_PIN, OUTPUT);
   digitalWrite(PWR_PIN, LOW);
-  delay(1000); //Datasheet Ton mintues = 1S
+  delay(1000); // Datasheet Ton mintues = 1S
   digitalWrite(PWR_PIN, HIGH);
 }
 
 void modemPowerOff() {
   pinMode(PWR_PIN, OUTPUT);
   digitalWrite(PWR_PIN, LOW);
-  delay(1200); //Datasheet Ton mintues = 1.2S
+  delay(1200); // Datasheet Ton mintues = 1.2S
   digitalWrite(PWR_PIN, HIGH);
   pinMode(PWR_PIN, INPUT);
 }
@@ -94,8 +96,8 @@ void modemHardReset() {
   delay(5000); // Wait 5 seconds for complete power up
 }
 
+// Refresh Air (fan on for 10 seconds)
 void refreshAir() {
-  // Refresh Air (fan on for 10 seconds)
   digitalWrite(FAN_PIN, HIGH);
   delay(10000);
   digitalWrite(FAN_PIN, LOW);
@@ -195,24 +197,22 @@ void disconnectAndPowerModemOff() {
   // Power down the modem using AT command first
   SerialMon.println(F("Powering down modem"));
   modem.poweroff();
-
-  // Disable I2C
-  Wire.end();
 }
 
-// Function to recover I2C bus if stuck
-void i2c_recover() {
+void handleI2CBeforeSleep() {
+  // Disable I2C
+  Wire.end();
+
+  // Set I2C pins to a known state before sleep
   pinMode(SDA, INPUT_PULLUP);
   pinMode(SCL, INPUT_PULLUP);
 
-  // https://www.forward.com.au/pfod/ArduinoProgramming/I2C_ClearBus/index.html
-  // A "9th clock pulse" on SCL is required to un-stick the bus if a device is holding SDA low.
-  for (int i = 0; i < 10 && digitalRead(SDA) == LOW; i++) {
-    pinMode(SCL, OUTPUT);
-    digitalWrite(SCL, HIGH);
-    digitalWrite(SCL, LOW);
-    pinMode(SCL, INPUT_PULLUP);
-  }
+  // Hold I2C pins during sleep
+  gpio_hold_en((gpio_num_t)SDA);
+  gpio_hold_en((gpio_num_t)SCL);
+
+  // Enable deep sleep hold globally
+  gpio_deep_sleep_hold_en();
 }
 
 void setup() {
@@ -228,18 +228,26 @@ void setup() {
   pinMode(FAN_PIN, OUTPUT);
   digitalWrite(FAN_PIN, LOW);
 
-  // PM2.5 sensor low power
-  particle.setLowpower();
+  // Disable deep sleep hold globally after wake-up
+  gpio_deep_sleep_hold_dis();
+
+  // Disable GPIO hold for pins
+  gpio_hold_dis((gpio_num_t)SDA);
+  gpio_hold_dis((gpio_num_t)SCL);
 
   // Set console baud rate
   SerialMon.begin(115200);
   delay(1000);
 
   // Recover I2C bus after deep sleep
-  i2c_recover();
+  // I2C_ClearBus();
+  // delay(200);
 
   // Start I2C
   Wire.begin();
+
+  // PM2.5 sensor low power
+  particle.setLowpower();
 
   // gas sensor
   // Mode of obtaining data: the main controller needs to request the sensor for data
@@ -327,12 +335,13 @@ void loop() {
 
   disconnectAndPowerModemOff();
 
+  // Mind i2c before sleep
+  handleI2CBeforeSleep();
+
   if (success) {
     SerialMon.println("Entering deep sleep for success");
     // sleep for 5 minutes
-    // ESP.deepSleep(300e6);
-    // sleep for 30 seconds
-    ESP.deepSleep(30e6);
+    ESP.deepSleep(300e6);
   } else {
     SerialMon.println("Entering deep sleep for error");
     // sleep for 1 minute
