@@ -241,10 +241,16 @@ void setup() {
 
   // Recover I2C bus after deep sleep
   // I2C_ClearBus();
-  // delay(200);
+  delay(200);
 
   // Start I2C
   Wire.begin();
+  // Wire.setClock(100000);
+
+  // Initialize sensors
+  CO.begin();
+  NO2.begin();
+  particle.begin();
 
   // PM2.5 sensor low power
   particle.setLowpower();
