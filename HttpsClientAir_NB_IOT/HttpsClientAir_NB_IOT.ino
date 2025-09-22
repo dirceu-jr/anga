@@ -1,3 +1,6 @@
+// TODO:
+// - may recirculate the air while modem initialization;
+
 // Select the modem
 #define TINY_GSM_MODEM_SIM7000SSL
 
@@ -56,7 +59,7 @@ TinyGsm modem(SerialAT);
 TinyGsmClientSecure client(modem);
 HttpClient http(client, server, port);
 
-#define UART_BAUD 115200
+#define MODEM_UART_BAUD 115200
 #define MODEM_PIN_TX 27
 #define MODEM_PIN_RX 26
 #define MODEM_PWR_PIN 4
@@ -96,8 +99,8 @@ void modemHardReset() {
   delay(5000);  // Wait 5 seconds for complete power up
 }
 
-// Refresh Air (fan ON for 15 seconds)
-void refreshAir() {
+// Recirculate Air (fan ON for 15 seconds)
+void recirculateAir() {
   digitalWrite(FAN_PIN, HIGH);
   delay(15000);
   digitalWrite(FAN_PIN, LOW);
@@ -239,7 +242,7 @@ void setup() {
   modemHardReset();
 
   // Set GSM module baud rate
-  SerialAT.begin(UART_BAUD, SERIAL_8N1, MODEM_PIN_RX, MODEM_PIN_TX);
+  SerialAT.begin(MODEM_UART_BAUD, SERIAL_8N1, MODEM_PIN_RX, MODEM_PIN_TX);
   delay(6000);
 
   // Restart takes quite some time
@@ -294,8 +297,8 @@ void setup() {
 }
 
 void loop() {
-  // Reflesh air
-  refreshAir();
+  // Recirculate air
+  recirculateAir();
 
   Readings readings = getReadings();
 
