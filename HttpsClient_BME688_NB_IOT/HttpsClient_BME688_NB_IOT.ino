@@ -1,7 +1,7 @@
 // TODO:
-// - May deep-sleep in errors (so a "reboot" occurs);
+// - May deep-sleep in errors (so a "reboot" occurs)?;
 
-// Select your modem:
+// Select the modem
 #define TINY_GSM_MODEM_SIM7000SSL
 
 // Set serial for debug console (to the Serial Monitor, default speed 115200)
@@ -70,14 +70,12 @@ TinyGsm        modem(SerialAT);
 TinyGsmClientSecure client(modem);
 HttpClient          http(client, server, port);
 
-int failed_connection_attempts = 0;
-
 #define UART_BAUD   115200
 #define PIN_TX      27
 #define PIN_RX      26
 #define PWR_PIN     4
 #define LED_PIN     12
-#define FAN_PIN     2
+#define FAN_PIN     0
 
 void modemPowerOn() {
   pinMode(PWR_PIN, OUTPUT);
@@ -255,17 +253,12 @@ void disconnectAndPowerModemOff() {
   // Power down the modem using AT command first
   SerialMon.println(F("Powering down modem with AT command..."));
   modem.poweroff();
-
-  // Then turn off the modem power
-  SerialMon.println(F("Powering off modem..."));
-  modemPowerOff();
-  SerialMon.println(F("Modem off"));
 }
 
-void refreshAir() {
-  // Refresh Air (fan on for 10 seconds)
+// Recirculate Air (fan on for 15 seconds)
+void recirculateAir() {
   digitalWrite(FAN_PIN, HIGH);
-  delay(10000);
+  delay(15000);
   digitalWrite(FAN_PIN, LOW);
 }
 
@@ -415,7 +408,7 @@ void loop() {
   unsigned long loop_start_time = millis();
   SerialMon.println("Loop start...");
 
-  refreshAir();
+  recirculateAir();
 
   // Read sensor data
   EnvSensorData reading = readSensorData();
@@ -428,20 +421,11 @@ void loop() {
 
   disconnectAndPowerModemOff();
 
-  // TODO:
-  // - may in case of error just skip this try, disconnect and go to sleep?;
-  // - or retry a few times before giving up?;
-  if (!success) {
-    failed_connection_attempts++;
-
-    // wait 60 seconds sleeping before retry
-    esp_sleep_enable_timer_wakeup(60 * 1000000); // 60 seconds in microseconds
-    esp_light_sleep_start();
-    return;
+  if (success) {
+    SerialMon.println("Entering light sleep for success");
+  } else {
+    SerialMon.println("Entering light sleep for error");
   }
-
-  // Reset counter on success
-  failed_connection_attempts = 0;
 
   // Calculate elapsed time
   unsigned long loop_duration = millis() - loop_start_time;
