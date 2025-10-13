@@ -1,4 +1,5 @@
 // TODO:
+// - test/timing of modem initialization;
 // - may recirculate the air while modem initialization;
 
 // Select the modem
@@ -79,14 +80,14 @@ struct Readings {
 void modemPowerOn() {
   pinMode(MODEM_PWR_PIN, OUTPUT);
   digitalWrite(MODEM_PWR_PIN, LOW);
-  delay(1000);  // Datasheet Ton mintues = 1S
+  delay(1000); // Datasheet Ton mintues = 1S
   digitalWrite(MODEM_PWR_PIN, HIGH);
 }
 
 void modemPowerOff() {
   pinMode(MODEM_PWR_PIN, OUTPUT);
   digitalWrite(MODEM_PWR_PIN, LOW);
-  delay(1200);  // Datasheet Ton mintues = 1.2S
+  delay(1200); // Datasheet Ton mintues = 1.2S
   digitalWrite(MODEM_PWR_PIN, HIGH);
   pinMode(MODEM_PWR_PIN, INPUT);
 }
@@ -94,9 +95,9 @@ void modemPowerOff() {
 void modemHardReset() {
   SerialMon.println(F("Performing modem hard reset"));
   modemPowerOff();
-  delay(5000);  // Wait 5 seconds for complete power down
+  delay(5000); // Wait 5 seconds for complete power down
   modemPowerOn();
-  delay(5000);  // Wait 5 seconds for complete power up
+  delay(5000); // Wait 5 seconds for complete power up
 }
 
 // Recirculate Air (fan ON for 15 seconds)
@@ -157,7 +158,12 @@ bool connectAndSendData(Readings readings) {
   http.connectionKeepAlive();  // this may be needed for HTTPS
 
   // Construct the resource URL
-  String resource = String("/update?api_key=") + writeAPIKey + "&field1=" + String(readings.co) + "&field2=" + String(readings.no2) + "&field3=" + String(readings.pm1) + "&field4=" + String(readings.pm25) + "&field5=" + String(readings.pm10);
+  String resource = String("/update?api_key=") + writeAPIKey +
+                    "&field1=" + String(readings.co) +
+                    "&field2=" + String(readings.no2) +
+                    "&field3=" + String(readings.pm1) +
+                    "&field4=" + String(readings.pm25) +
+                    "&field5=" + String(readings.pm10);
 
   SerialMon.print(F("Performing HTTPS GET request "));
   int err = http.get(resource);
@@ -319,11 +325,10 @@ void loop() {
 
   if (success) {
     SerialMon.println("Entering deep sleep for success");
-    // Sleep for 10 minutes
-    ESP.deepSleep(600e6);
   } else {
     SerialMon.println("Entering deep sleep for error");
-    // Sleep for 1 minute
-    ESP.deepSleep(60e6);
   }
+
+  // Sleep for 10 minutes
+  ESP.deepSleep(600e6);
 }
