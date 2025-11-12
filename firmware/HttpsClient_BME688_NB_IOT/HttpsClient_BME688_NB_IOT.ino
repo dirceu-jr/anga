@@ -40,7 +40,7 @@ const char gprsPass[] = "datatem";
 const char server[] = "api.thingspeak.com";
 const int port = 443;
 
-const char* writeAPIKey = "7OETW4UYYTX3NAZF";
+const char* writeAPIKey = "API Key";
 
 // Create an object of the class Bsec2
 Bsec2 envSensor;

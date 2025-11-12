@@ -48,7 +48,7 @@ const char server[] = "api.thingspeak.com";
 const int port = 443;
 
 // Generic Cat 1
-const char* writeAPIKey = "3EZH6NMK39QCGLCM";
+const char* writeAPIKey = "API Key";
 
 #include "esp_wifi.h"
 #include "esp_bt.h"

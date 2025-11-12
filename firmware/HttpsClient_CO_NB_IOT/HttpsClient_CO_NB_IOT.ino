@@ -37,7 +37,7 @@ const char gprsPass[] = "datatem";
 const char server[] = "api.thingspeak.com";
 const int port = 443;
 
-const char* writeAPIKey = "NEC73XT4UKMIPOZM";
+const char* writeAPIKey = "API Key";
 
 #define I2C_ADDRESS    0x74
 DFRobot_GAS_I2C gas(&Wire, I2C_ADDRESS);
