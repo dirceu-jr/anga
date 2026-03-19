@@ -399,7 +399,7 @@ void setup() {
   // 13 GSM only
   // 38 LTE only
   // 51 GSM and LTE only
-  res = modem.setNetworkMode(2);
+  res = modem.setNetworkMode(38);
   SerialMon.print("setNetworkMode: ");
   SerialMon.println(res);
 }

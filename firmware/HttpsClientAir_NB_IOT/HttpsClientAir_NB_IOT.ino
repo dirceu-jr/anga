@@ -258,9 +258,6 @@ void setup() {
   SerialMon.println("Initializing modem");
   modem.init();
 
-  // Update modem clock
-  modem.sendAT("+CCLK=\"25/09/22,21:10:00\"");
-
   // Disable GPS
   modem.disableGPS();
 
@@ -297,7 +294,7 @@ void setup() {
   // 13 GSM only
   // 38 LTE only
   // 51 GSM and LTE only
-  res = modem.setNetworkMode(2);
+  res = modem.setNetworkMode(38);
   SerialMon.print("setNetworkMode: ");
   SerialMon.println(res);
 }
