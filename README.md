@@ -41,6 +41,15 @@ This is the probably hardware that will be used:
 
 <img width="260" src="https://raw.githubusercontent.com/dirceu-jr/anga/master/readme_files/pm25.webp" alt="PM2.5 Air Quality Sensor">
 
+# Firmware
+
+Currently used firmware is here:
+- [BME688 (Air Quality)][1]
+- [CO, NO2 and PM2.5 sensors][2]
+
+[1]: https://github.com/dirceu-jr/anga/blob/master/firmware/HttpsClient_BME688_NB_IOT/HttpsClient_BME688_NB_IOT.ino
+[2]: https://github.com/dirceu-jr/anga/blob/master/firmware/HttpsClientAir_NB_IOT/HttpsClientAir_NB_IOT.ino
+
 # Real-Time Data
 
 <iframe width="380" height="260" src="https://thingspeak.mathworks.com/channels/3022878/charts/1?title=CO&width=1&height=1"></iframe>
