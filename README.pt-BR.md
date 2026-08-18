@@ -47,6 +47,10 @@ O firmware atualmente em uso está aqui:
 - [BME688 (Air Quality)](https://github.com/dirceu-jr/anga/blob/main/firmware/HttpsClient_BME688_NB_IOT/HttpsClient_BME688_NB_IOT.ino)
 - [CO, NO2 and PM2.5 sensors](https://github.com/dirceu-jr/anga/blob/main/firmware/HttpsClientAir_NB_IOT/HttpsClientAir_NB_IOT.ino)
 
+# Observações
+
+Os modems SIM7000G / A7670G podem precisar de uma atualização de firmware para funcionar com certificados SSL/TLS modernos.
+
 # Dados em tempo real
 
 <iframe width="380" height="260" src="https://thingspeak.mathworks.com/channels/3022878/charts/1?title=CO&width=1&height=1"></iframe>
