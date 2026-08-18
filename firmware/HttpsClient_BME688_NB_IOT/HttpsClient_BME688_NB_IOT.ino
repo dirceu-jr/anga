@@ -100,17 +100,21 @@ void modemHardReset() {
   delay(5000); // Wait 5 seconds for complete power up
 }
 
-void checkBsecStatus(Bsec2 bsec) {
+void checkBsecStatus(const Bsec2 &bsec) {
   if (bsec.status < BSEC_OK) {
-    SerialMon.println("BSEC error code : " + String(bsec.status));
+    SerialMon.print(F("BSEC error code : "));
+    SerialMon.println(bsec.status);
   } else if (bsec.status > BSEC_OK) {
-    SerialMon.println("BSEC warning code : " + String(bsec.status));
+    SerialMon.print(F("BSEC warning code : "));
+    SerialMon.println(bsec.status);
   }
 
   if (bsec.sensor.status < BME68X_OK) {
-    SerialMon.println("BME68X error code : " + String(bsec.sensor.status));
+    SerialMon.print(F("BME68X error code : "));
+    SerialMon.println(bsec.sensor.status);
   } else if (bsec.sensor.status > BME68X_OK) {
-    SerialMon.println("BME68X warning code : " + String(bsec.sensor.status));
+    SerialMon.print(F("BME68X warning code : "));
+    SerialMon.println(bsec.sensor.status);
   }
 }
 
@@ -156,16 +160,16 @@ void startEnvSensor() {
     checkBsecStatus(envSensor);
   }
 
-  SerialMon.println("BSEC library version " + \
-    String(envSensor.version.major) + "." \
-    + String(envSensor.version.minor) + "." \
-    + String(envSensor.version.major_bugfix) + "." \
-    + String(envSensor.version.minor_bugfix));
+  SerialMon.printf("BSEC library version %d.%d.%d.%d\n",
+    envSensor.version.major,
+    envSensor.version.minor,
+    envSensor.version.major_bugfix,
+    envSensor.version.minor_bugfix);
 }
 
 EnvSensorData readSensorData() {
   const bsecOutputs* outputs = nullptr;
-  EnvSensorData data;
+  EnvSensorData data = {};
 
   while (true) {
     if (!envSensor.run()) {
@@ -186,53 +190,68 @@ EnvSensorData readSensorData() {
       case BSEC_OUTPUT_IAQ:
         data.iaq = output.signal;
         data.iaq_accuracy = output.accuracy;
-        SerialMon.println("\tIAQ = " + String(output.signal));
-        SerialMon.println("\tIAQ accuracy = " + String((int) output.accuracy));
+        SerialMon.print(F("\tIAQ = "));
+        SerialMon.println(output.signal);
+        SerialMon.print(F("\tIAQ accuracy = "));
+        SerialMon.println((int) output.accuracy);
         break;
       // case BSEC_OUTPUT_RAW_TEMPERATURE:
-      //   SerialMon.println("\tTemperature = " + String(output.signal));
+      //   SerialMon.print(F("\tTemperature = "));
+      //   SerialMon.println(output.signal);
       //   break;
       // case BSEC_OUTPUT_RAW_PRESSURE:
-      //   SerialMon.println("\tPressure = " + String(output.signal));
+      //   SerialMon.print(F("\tPressure = "));
+      //   SerialMon.println(output.signal);
       //   break;
       // case BSEC_OUTPUT_RAW_HUMIDITY:
-      //   SerialMon.println("\tHumidity = " + String(output.signal));
+      //   SerialMon.print(F("\tHumidity = "));
+      //   SerialMon.println(output.signal);
       //   break;
       // case BSEC_OUTPUT_RAW_GAS:
-      //   SerialMon.println("\tGas resistance = " + String(output.signal));
+      //   SerialMon.print(F("\tGas resistance = "));
+      //   SerialMon.println(output.signal);
       //   break;
       case BSEC_OUTPUT_STABILIZATION_STATUS:
-        SerialMon.println("\tStabilization status = " + String(output.signal));
+        SerialMon.print(F("\tStabilization status = "));
+        SerialMon.println(output.signal);
         break;
       case BSEC_OUTPUT_RUN_IN_STATUS:
-        SerialMon.println("\tRun in status = " + String(output.signal));
+        SerialMon.print(F("\tRun in status = "));
+        SerialMon.println(output.signal);
         break;
       case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE:
         data.temperature = output.signal;
-        SerialMon.println("\tCompensated temperature = " + String(output.signal));
+        SerialMon.print(F("\tCompensated temperature = "));
+        SerialMon.println(output.signal);
         break;
       case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY:
         data.humidity = output.signal;
-        SerialMon.println("\tCompensated humidity = " + String(output.signal));
+        SerialMon.print(F("\tCompensated humidity = "));
+        SerialMon.println(output.signal);
         break;
       case BSEC_OUTPUT_STATIC_IAQ:
         data.static_iaq = output.signal;
-        SerialMon.println("\tStatic IAQ = " + String(output.signal));
+        SerialMon.print(F("\tStatic IAQ = "));
+        SerialMon.println(output.signal);
         break;
       case BSEC_OUTPUT_CO2_EQUIVALENT:
         data.co2_equivalent = output.signal;
-        SerialMon.println("\tCO2 Equivalent = " + String(output.signal));
+        SerialMon.print(F("\tCO2 Equivalent = "));
+        SerialMon.println(output.signal);
         break;
       case BSEC_OUTPUT_BREATH_VOC_EQUIVALENT:
         data.breath_voc_equivalent = output.signal;
-        SerialMon.println("\tbVOC equivalent = " + String(output.signal));
+        SerialMon.print(F("\tbVOC equivalent = "));
+        SerialMon.println(output.signal);
         break;
       // case BSEC_OUTPUT_GAS_PERCENTAGE:
-      //   SerialMon.println("\tGas percentage = " + String(output.signal));
+      //   SerialMon.print(F("\tGas percentage = "));
+      //   SerialMon.println(output.signal);
       //   break;
       case BSEC_OUTPUT_COMPENSATED_GAS:
         data.compensated_gas = output.signal;
-        SerialMon.println("\tCompensated gas = " + String(output.signal));
+        SerialMon.print(F("\tCompensated gas = "));
+        SerialMon.println(output.signal);
         break;
       default:
         break;
@@ -262,53 +281,56 @@ void recirculateAir() {
   digitalWrite(FAN_PIN, LOW);
 }
 
-bool connectAndSendData(EnvSensorData reading) {
-  SerialMon.print("Signal quality: ");
+bool connectAndSendData(const EnvSensorData &reading) {
+  SerialMon.print(F("Signal quality: "));
   SerialMon.println(modem.getSignalQuality());
 
   // Wait for network for 60 seconds
-  SerialMon.print("Waiting for network...");
+  SerialMon.print(F("Waiting for network..."));
   if (!modem.waitForNetwork()) {
-    SerialMon.println(" fail");
+    SerialMon.println(F(" fail"));
     return false;
   }
-  SerialMon.println(" success");
+  SerialMon.println(F(" success"));
 
   if (modem.isNetworkConnected()) {
-    SerialMon.println("Network connected");
+    SerialMon.println(F("Network connected"));
   }
 
   // GPRS connection parameters are usually set after network registration
   if (modem.isGprsConnected()) {
-    SerialMon.println("GPRS already connected.");
+    SerialMon.println(F("GPRS already connected."));
   } else {
     SerialMon.print(F("Connecting to "));
     SerialMon.print(apn);
     if (!modem.gprsConnect(apn, gprsUser, gprsPass)) {
-      SerialMon.println(" fail");
+      SerialMon.println(F(" fail"));
       return false;
     }
-    SerialMon.println(" success");
+    SerialMon.println(F(" success"));
   }
 
   if (modem.isGprsConnected()) {
-    SerialMon.println("GPRS connected.");
+    SerialMon.println(F("GPRS connected."));
   }
 
   // Now try HTTP request
   http.setTimeout(30000);
   http.connectionKeepAlive(); // this may be needed for HTTPS
 
-  // Construct the resource URL
-  String resource = String("/update?api_key=") + writeAPIKey +
-                    "&field1=" + String(reading.iaq) +
-                    "&field2=" + String(reading.iaq_accuracy) +
-                    "&field3=" + String(reading.temperature) +
-                    "&field4=" + String(reading.humidity) +
-                    "&field5=" + String(reading.static_iaq) +
-                    "&field6=" + String(reading.co2_equivalent) +
-                    "&field7=" + String(reading.breath_voc_equivalent) +
-                    "&field8=" + String(reading.compensated_gas);
+  // Construct the resource URL using a fixed buffer (no dynamic heap allocations)
+  char resource[256];
+  snprintf(resource, sizeof(resource),
+           "/update?api_key=%s&field1=%.2f&field2=%d&field3=%.2f&field4=%.2f&field5=%.2f&field6=%.2f&field7=%.2f&field8=%.2f",
+           writeAPIKey,
+           reading.iaq,
+           reading.iaq_accuracy,
+           reading.temperature,
+           reading.humidity,
+           reading.static_iaq,
+           reading.co2_equivalent,
+           reading.breath_voc_equivalent,
+           reading.compensated_gas);
 
   SerialMon.print(F("Performing HTTPS GET request... "));
   int err = http.get(resource);
@@ -318,16 +340,21 @@ bool connectAndSendData(EnvSensorData reading) {
     return false;
   }
 
-  int status = http.responseStatusCode();
-  SerialMon.print(F("Response status code: "));
-  SerialMon.println(status);
-  if (status <= 0) {
-    return false;
-  }
+  // Check HTTP response status
+  // int status = http.responseStatusCode();
+  // SerialMon.print(F("Response status code: "));
+  // SerialMon.println(status);
+  // if (status <= 0) {
+  //   return false;
+  // }
 
-  String body = http.responseBody();
-  SerialMon.println(F("Response body:"));
-  SerialMon.println(body);
+  // Read HTTP response body (optional)
+  // SerialMon.println(F("Response body:"));
+  // while (http.available()) {
+  //   char c = http.read();
+  //   SerialMon.print(c);
+  // }
+  // SerialMon.println();
 
   return true;
 }
@@ -377,36 +404,34 @@ void setup() {
     SerialMon.println("SGPIO=0,4,1,0 false");
   }
 
-  String name = modem.getModemName();
-  SerialMon.println("Modem Name: " + name);
+  SerialMon.print(F("Modem Name: "));
+  SerialMon.println(modem.getModemName());
 
-  String modemInfo = modem.getModemInfo();
-  SerialMon.println("Modem Info: " + modemInfo);
+  SerialMon.print(F("Modem Info: "));
+  SerialMon.println(modem.getModemInfo());
 
   // Check SIM status
-  SerialMon.print("SIM Status: ");
+  SerialMon.print(F("SIM Status: "));
   SerialMon.println(modem.getSimStatus());
 
-  String res;
   // 1 CAT-M
   // 2 NB-IoT
   // 3 CAT-M and NB-IoT
-  res = modem.setPreferredMode(2);
-  SerialMon.print("setPreferredMode: ");
-  SerialMon.println(res);
+  SerialMon.print(F("setPreferredMode: "));
+  SerialMon.println(modem.setPreferredMode(2));
 
   // 2 Automatic
   // 13 GSM only
   // 38 LTE only
   // 51 GSM and LTE only
-  res = modem.setNetworkMode(38);
-  SerialMon.print("setNetworkMode: ");
-  SerialMon.println(res);
+  SerialMon.print(F("setNetworkMode: "));
+  SerialMon.println(modem.setNetworkMode(38));
 }
 
 void loop() {
   unsigned long loop_start_time = millis();
-  SerialMon.println("Loop start...");
+  SerialMon.printf("Loop start... [Free Heap: %d, Max Block: %d]\n",
+                   ESP.getFreeHeap(), ESP.getMaxAllocHeap());
 
   recirculateAir();
 
